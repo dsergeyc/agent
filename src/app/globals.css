@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* Adobe Spectrum–inspired tokens (neutral surfaces, blue CTA, clear borders) */
+@theme inline {
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+  --color-spectrum-gray-50: #fafafa;
+  --color-spectrum-gray-75: #f5f5f5;
+  --color-spectrum-gray-100: #eaeaea;
+  --color-spectrum-gray-200: #e0e0e0;
+  --color-spectrum-gray-300: #cacaca;
+  --color-spectrum-gray-400: #b1b1b1;
+  --color-spectrum-gray-500: #8f8f8f;
+  --color-spectrum-gray-600: #6e6e6e;
+  --color-spectrum-gray-700: #4b4b4b;
+  --color-spectrum-gray-800: #2c2c2c;
+  --color-spectrum-gray-900: #1a1a1a;
+  --color-spectrum-blue-400: #378ef0;
+  --color-spectrum-blue-500: #2680eb;
+  --color-spectrum-blue-600: #1473e6;
+  --color-spectrum-blue-700: #0d66d0;
+  --color-spectrum-blue-800: #095aba;
+  --radius-spectrum: 6px;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply min-h-dvh bg-spectrum-gray-75 text-spectrum-gray-900 font-sans;
+}
