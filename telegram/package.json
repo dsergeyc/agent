@@ -1,0 +1,20 @@
+{
+  "name": "telegram-channel-bot",
+  "version": "1.0.0",
+  "description": "Auto-posts Russian design content to a Telegram channel",
+  "scripts": {
+    "start": "tsx index.ts",
+    "post-now": "tsx post-now.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.0"
+  }
+}
