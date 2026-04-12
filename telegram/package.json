@@ -4,7 +4,8 @@
   "description": "Auto-posts Russian design content to a Telegram channel",
   "scripts": {
     "start": "tsx index.ts",
-    "post-now": "tsx post-now.ts"
+    "post-now": "tsx post-now.ts",
+    "get-channel-id": "tsx get-channel-id.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
