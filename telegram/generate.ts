@@ -1,8 +1,11 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { ProxyAgent, setGlobalDispatcher } from "undici";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const API_KEY = process.env.ANTHROPIC_API_KEY;
+if (!API_KEY) throw new Error("ANTHROPIC_API_KEY is not set");
+
+// Node.js fetch (undici) doesn't use HTTP_PROXY automatically — set it manually
+const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+if (proxyUrl) setGlobalDispatcher(new ProxyAgent(proxyUrl));
 
 // Rotating post types to keep the channel varied
 const POST_TYPES = [
@@ -21,9 +24,15 @@ const POST_TYPES = [
 export async function generatePost(): Promise<string> {
   const postType = POST_TYPES[Math.floor(Math.random() * POST_TYPES.length)];
 
-  const { text } = await client.messages
-    .create({
-      model: "claude-sonnet-4-6",
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": API_KEY,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       system: `Ты — опытный продуктовый дизайнер из Кремниевой долины, ведёшь Telegram-канал для русскоязычной аудитории.
 Твои посты: полезные, живые, без воды, с практическими инсайтами.
@@ -37,12 +46,16 @@ export async function generatePost(): Promise<string> {
           content: `Напиши пост на тему: ${postType}`,
         },
       ],
-    })
-    .then((msg) => {
-      const block = msg.content[0];
-      if (block.type !== "text") throw new Error("Unexpected response type");
-      return { text: block.text };
-    });
+    }),
+  });
 
-  return text;
+  const data = (await res.json()) as {
+    content?: Array<{ type: string; text: string }>;
+    error?: { message: string };
+  };
+
+  if (data.error) throw new Error(`Anthropic API error: ${data.error.message}`);
+  const block = data.content?.[0];
+  if (!block || block.type !== "text") throw new Error("Unexpected response");
+  return block.text;
 }
