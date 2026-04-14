@@ -3,7 +3,7 @@ import cron from "node-cron";
 import { generatePost } from "./generate";
 import { sendMessage, sendPhoto } from "./telegram";
 
-const SCHEDULE = process.env.POST_SCHEDULE ?? "0 7 * * 1,3,5";
+const SCHEDULE = process.env.POST_SCHEDULE ?? "0 7,16 * * *";
 
 async function postToChannel(): Promise<void> {
   console.log(`[${new Date().toISOString()}] Generating post...`);
