@@ -1,4 +1,5 @@
 import { ProxyAgent, setGlobalDispatcher } from "undici";
+import { fetchTodaysNews } from "./news";
 
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 if (!API_KEY) throw new Error("ANTHROPIC_API_KEY is not set");
@@ -64,6 +65,19 @@ export async function generatePost(): Promise<GeneratedPost> {
   const postType = POST_TYPES[index];
   const unsplashQuery = UNSPLASH_QUERIES[index];
 
+  // Fetch today's real tech news to ground the post in current events
+  const today = new Date().toLocaleDateString("ru-RU", { year: "numeric", month: "long", day: "numeric" });
+  let newsContext = "";
+  try {
+    const news = await fetchTodaysNews();
+    if (news.length > 0) {
+      newsContext = "\n\nАктуальные новости сегодня (используй как контекст):\n" +
+        news.map((n, i) => `${i + 1}. ${n.title} — ${n.url}`).join("\n");
+    }
+  } catch {
+    // Continue without news if fetch fails
+  }
+
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -91,7 +105,7 @@ export async function generatePost(): Promise<GeneratedPost> {
       messages: [
         {
           role: "user",
-          content: `Напиши пост на тему: ${postType}`,
+          content: `Сегодня ${today}.${newsContext}\n\nНапиши пост на тему: ${postType}. Если среди новостей выше есть что-то релевантное — используй как основу. Ссылку в конце поста бери из реальных новостей выше, если подходит.`,
         },
       ],
     }),
