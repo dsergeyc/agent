@@ -1,0 +1,22 @@
+{
+  "name": "twitter-channel-bot",
+  "version": "1.0.0",
+  "description": "Auto-posts Silicon Valley design content to X (Twitter)",
+  "scripts": {
+    "start": "tsx index.ts",
+    "post-now": "tsx post-now.ts",
+    "post-many": "tsx post-many.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3",
+    "twitter-api-v2": "^1.17.0",
+    "undici": "^8.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.0"
+  }
+}
