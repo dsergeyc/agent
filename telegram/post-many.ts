@@ -1,21 +1,22 @@
-/**
- * Posts N times with a short delay between each.
- * Usage: npm run post-many -- 3
- */
 import "dotenv/config";
 import { generatePost } from "./generate";
-import { sendMessage } from "./telegram";
+import { sendMessage, sendPhoto } from "./telegram";
 
 const count = parseInt(process.argv[2] ?? "3", 10);
 
 (async () => {
   for (let i = 1; i <= count; i++) {
     console.log(`\n[${i}/${count}] Generating post...`);
-    const text = await generatePost();
+    const { text, imageUrl } = await generatePost();
     console.log("\n--- PREVIEW ---\n");
     console.log(text);
+    if (imageUrl) console.log(`\n🖼  Image: ${imageUrl}`);
     console.log("\n--- SENDING ---\n");
-    await sendMessage(text);
+    if (imageUrl) {
+      await sendPhoto(imageUrl, text);
+    } else {
+      await sendMessage(text);
+    }
     console.log(`✓ Posted!`);
     if (i < count) {
       console.log("Waiting 3 seconds...");

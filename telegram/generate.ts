@@ -7,7 +7,6 @@ if (!API_KEY) throw new Error("ANTHROPIC_API_KEY is not set");
 const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
 if (proxyUrl) setGlobalDispatcher(new ProxyAgent(proxyUrl));
 
-// Rotating post angles — all grounded in Denis's real insider experience
 const POST_TYPES = [
   "личная история или ошибка из реального опыта работы дизайнером в Silicon Valley",
   "чем культура дизайна в Silicon Valley отличается от того, как работают в России или Европе",
@@ -21,8 +20,29 @@ const POST_TYPES = [
   "как дизайнеру из России или СНГ выйти на рынок США — честный взгляд изнутри",
 ];
 
-export async function generatePost(): Promise<string> {
-  const postType = POST_TYPES[Math.floor(Math.random() * POST_TYPES.length)];
+// Unsplash topics that match each post type (same order)
+const UNSPLASH_QUERIES = [
+  "silicon valley office",
+  "design team collaboration",
+  "product design",
+  "san francisco city",
+  "job interview tech",
+  "startup office",
+  "designer working",
+  "career growth",
+  "design review whiteboard",
+  "usa tech city",
+];
+
+export interface GeneratedPost {
+  text: string;
+  imageUrl: string | null;
+}
+
+export async function generatePost(): Promise<GeneratedPost> {
+  const index = Math.floor(Math.random() * POST_TYPES.length);
+  const postType = POST_TYPES[index];
+  const unsplashQuery = UNSPLASH_QUERIES[index];
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -33,21 +53,18 @@ export async function generatePost(): Promise<string> {
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      system: `Ты — Денис, русскоязычный продуктовый дизайнер, уже много лет живёшь и работаешь в Кремниевой долине.
-Ведёшь Telegram-канал "Silicon Valley Designer" для русскоязычной аудитории — людей в России и русских за рубежом, которые хотят понять, как устроена жизнь и карьера дизайнера в американском tech.
-
-Твой главный актив — ты реально там живёшь. Пишешь от первого лица, делишься личным опытом, не пересказываешь статьи.
+      max_tokens: 512,
+      system: `Ты — Денис, русскоязычный продуктовый дизайнер, живёшь и работаешь в Кремниевой долине.
+Ведёшь Telegram-канал для русскоязычной аудитории — людей, которые хотят понять жизнь и карьеру дизайнера в американском tech.
 
 Правила:
-— Пиши как живой человек, не как корпоративный блог и не как ChatGPT
-— Начинай с конкретной ситуации или наблюдения, а не с общих слов
+— Пиши от первого лица, коротко и живо — как голосовое сообщение другу, только текстом
+— Длина: 80–120 слов, не больше
+— Начинай с конкретного момента или наблюдения, без вступлений
 — Используй Telegram-форматирование: *жирный*, _курсив_
-— Длина: 150–250 слов — коротко и по делу
-— Заканчивай личным вопросом к читателю или неожиданным выводом
-— 2–4 эмодзи, органично вписанные в текст
-— Никаких хэштегов
-— Никаких списков из 10 пунктов — только живой рассказ`,
+— Заканчивай одним коротким вопросом к читателю
+— 2–3 эмодзи максимум
+— Никаких хэштегов, никаких длинных списков`,
       messages: [
         {
           role: "user",
@@ -65,5 +82,22 @@ export async function generatePost(): Promise<string> {
   if (data.error) throw new Error(`Anthropic API error: ${data.error.message}`);
   const block = data.content?.[0];
   if (!block || block.type !== "text") throw new Error("Unexpected response");
-  return block.text;
+
+  // Fetch a relevant image from Unsplash (no API key needed for this endpoint)
+  const unsplashAccessKey = process.env.UNSPLASH_ACCESS_KEY;
+  let imageUrl: string | null = null;
+
+  if (unsplashAccessKey) {
+    try {
+      const imgRes = await fetch(
+        `https://api.unsplash.com/photos/random?query=${encodeURIComponent(unsplashQuery)}&orientation=landscape&client_id=${unsplashAccessKey}`
+      );
+      const imgData = (await imgRes.json()) as { urls?: { regular: string } };
+      imageUrl = imgData.urls?.regular ?? null;
+    } catch {
+      // Image is optional — continue without it
+    }
+  }
+
+  return { text: block.text, imageUrl };
 }
